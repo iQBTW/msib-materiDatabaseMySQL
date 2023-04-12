@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 07, 2023 at 04:23 PM
+-- Generation Time: Apr 12, 2023 at 09:58 PM
 -- Server version: 10.4.20-MariaDB
 -- PHP Version: 8.2.3
 
@@ -29,8 +29,19 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `jenis_produk` (
   `id` int(11) NOT NULL,
-  `nama` varchar(45) DEFAULT NULL
+  `nama` varchar(45) DEFAULT NULL,
+  `ket` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `jenis_produk`
+--
+
+INSERT INTO `jenis_produk` (`id`, `nama`, `ket`) VALUES
+(1, 'Elektronik', 'tersedia'),
+(2, 'Makanan', 'tersedia'),
+(3, 'Minuman', 'tidak tersedia'),
+(4, 'Furniture', 'tersedia');
 
 -- --------------------------------------------------------
 
@@ -63,6 +74,15 @@ CREATE TABLE `pelanggan` (
   `email` varchar(45) DEFAULT NULL,
   `kartu_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `pelanggan`
+--
+
+INSERT INTO `pelanggan` (`id`, `kode`, `nama_pelanggan`, `jk`, `alamat`, `tmp_lahir`, `tgl_lahir`, `email`, `kartu_id`) VALUES
+(1, '5055', 'Rizqy', 'L', 'Jl.inijalan', 'Tabanan', '2000-12-21', 'estrizqy@gmail.com', 1),
+(2, '5056', 'Sandi', 'L', 'Jl.inijalan', 'Tabanan', '1999-02-08', 'iniemail1@gmail.com', 2),
+(3, '5057', 'Budi', 'L', 'Jl.inijalan', 'Malang', '2003-08-12', 'iniemail2@gmail.com', 3);
 
 -- --------------------------------------------------------
 
@@ -127,10 +147,26 @@ CREATE TABLE `pesanan_items` (
 
 CREATE TABLE `produk` (
   `id` int(11) NOT NULL,
+  `kode_produk` varchar(10) DEFAULT NULL,
   `nama_produk` varchar(45) DEFAULT NULL,
   `harga_produk` double DEFAULT NULL,
-  `jumlah_produk` int(11) DEFAULT NULL
+  `harga_beli` double DEFAULT NULL,
+  `stok` int(11) DEFAULT NULL,
+  `min_stok` int(11) DEFAULT NULL,
+  `jumlah_produk` int(11) DEFAULT NULL,
+  `jenis_produk_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `produk`
+--
+
+INSERT INTO `produk` (`id`, `kode_produk`, `nama_produk`, `harga_produk`, `harga_beli`, `stok`, `min_stok`, `jumlah_produk`, `jenis_produk_id`) VALUES
+(1, '2011', 'TV', 2000000, 1000000, 20, 1, 100, 1),
+(7, '2012', 'Mouse', 200000, 90000, 15, 3, 30, 1),
+(8, '2013', 'Fried Chicken', 8000, 5000, 50, 1, 150, 2),
+(9, '2014', 'Lemari', 1200000, 500000, 30, 1, 50, 4),
+(10, '2015', 'Es Teh', 3000, 2000, 50, 1, 120, 3);
 
 -- --------------------------------------------------------
 
@@ -199,7 +235,8 @@ ALTER TABLE `pesanan_items`
 -- Indexes for table `produk`
 --
 ALTER TABLE `produk`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `kode_produk` (`kode_produk`);
 
 --
 -- Indexes for table `vendor`
@@ -215,7 +252,7 @@ ALTER TABLE `vendor`
 -- AUTO_INCREMENT for table `jenis_produk`
 --
 ALTER TABLE `jenis_produk`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `kartu`
@@ -227,7 +264,7 @@ ALTER TABLE `kartu`
 -- AUTO_INCREMENT for table `pelanggan`
 --
 ALTER TABLE `pelanggan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `pembayaran`
@@ -257,7 +294,7 @@ ALTER TABLE `pesanan_items`
 -- AUTO_INCREMENT for table `produk`
 --
 ALTER TABLE `produk`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `vendor`
