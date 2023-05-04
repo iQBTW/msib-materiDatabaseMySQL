@@ -87,3 +87,30 @@ MariaDB [dbtugas7]> call totalPesanan;
 1 row in set (0.004 sec)
 
 Query OK, 0 rows affected (0.011 sec)
+
+-- tampilkan seluruh pesanan dari semua pelanggan
+MariaDB [dbtugas7]> CREATE PROCEDURE listPesanan()
+    -> BEGIN
+    -> SELECT pesanan.id, pesanan.tanggal, pesanan.total, pelanggan.nama FROM pesanan
+    -> JOIN pelanggan on pesanan.pelanggan_id = pelanggan.id;
+    -> end$$
+Query OK, 0 rows affected (0.004 sec)
+
+MariaDB [dbtugas7]> call listPesanan;
++----+------------+---------+---------------+
+| id | tanggal    | total   | nama          |
++----+------------+---------+---------------+
+|  1 | 2015-11-04 | 9720000 | Agung Sedayu  |
+|  2 | 2015-11-04 |   17500 | Sekar Mirah   |
+|  3 | 2015-11-04 |       0 | Gayatri Dwi   |
+|  4 | 2015-11-04 |       0 | Dewi Gyat     |
+|  5 | 2015-11-04 |       0 | Cassanndra    |
+|  6 | 2015-11-04 |       0 | Pandan Wangi  |
+|  7 | 2015-11-04 |       0 | Pradabashu    |
+|  8 | 2015-11-04 |       0 | Swandaru Geni |
+|  9 | 2015-11-04 |       0 | Andre Haru    |
+| 10 | 2015-11-04 |       0 | Ahmad Hasan   |
++----+------------+---------+---------------+
+10 rows in set (0.001 sec)
+
+Query OK, 0 rows affected (0.028 sec)
