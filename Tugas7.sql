@@ -114,3 +114,35 @@ MariaDB [dbtugas7]> call listPesanan;
 10 rows in set (0.001 sec)
 
 Query OK, 0 rows affected (0.028 sec)
+
+-- buatkan query panjang di atas menjadi sebuah view baru: pesanan_produk_vw (menggunakan join dari table pesanan,pelanggan dan produk)
+CREATE VIEW pesanan_produk_vw AS
+    -> SELECT
+    ->   p.id AS pesanan_id,
+    ->   pe.nama AS pelanggan_nama,
+    ->   pe.email AS pelanggan_email,
+    ->   pr.nama AS produk_nama,
+    ->   pr.harga_beli,
+    ->   pr.harga_jual,
+    ->   pi.qty,
+    ->   pi.harga
+    -> FROM
+    ->   pesanan p
+    ->   JOIN pelanggan pe ON p.pelanggan_id = pe.id
+    ->   JOIN pesanan_items pi ON p.id = pi.pesanan_id
+    ->   JOIN produk pr ON pi.produk_id = pr.id;
+Query OK, 0 rows affected (0.008 sec)
+
+SELECT * FROM pesanan_produk_vw;
++------------+----------------+------------------+------------------+------------+------------+------+---------+
+| pesanan_id | pelanggan_nama | pelanggan_email  | produk_nama      | harga_beli | harga_jual | qty  | harga   |
++------------+----------------+------------------+------------------+------------+------------+------+---------+
+|          1 | Agung Sedayu   | sedayu@gmail.com | Televisi 21 inch |    3500000 |    5040000 |    1 | 5040000 |
+|          1 | Agung Sedayu   | sedayu@gmail.com | Kulkas 2 pintu   |    3500000 |    4680000 |    1 | 4680000 |
+|          2 | Sekar Mirah    | mirah@yahoo.com  | Teh Kotak        |       3000 |       3500 |    5 |    3500 |
+|          3 | Gayatri Dwi    | gaya87@gmail.com | Teh Kotak        |       3000 |       3500 |   10 |    3500 |
+|          3 | Gayatri Dwi    | gaya87@gmail.com | Televisi 21 inch |    3500000 |    5040000 |    1 | 5040000 |
+|          5 | Cassanndra     | casa90@gmail.com | Teh Kotak        |       3000 |       3500 |   10 |    3500 |
+|          6 | Pandan Wangi   | wangi@gmail.com  | Teh Kotak        |       3000 |       3500 |   20 |    3500 |
++------------+----------------+------------------+------------------+------------+------------+------+---------+
+7 rows in set (0.004 sec)
