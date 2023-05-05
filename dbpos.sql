@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 05, 2023 at 11:57 AM
+-- Generation Time: May 05, 2023 at 04:20 PM
 -- Server version: 10.4.24-MariaDB
 -- PHP Version: 8.1.6
 
@@ -130,7 +130,9 @@ INSERT INTO `pelanggan` (`id`, `kode`, `nama`, `jk`, `tmp_lahir`, `tgl_lahir`, `
 (8, 'C008', 'Andre Haru', 'L', 'Surabaya', '1990-07-15', 'andre.haru@gmail.com', 4),
 (9, 'C009', 'Ahmad Hasan', 'L', 'Surabaya', '1992-10-15', 'ahasan@gmail.com', 4),
 (10, 'C010', 'Cassanndra', 'P', 'Belfast', '1990-11-20', 'casa90@gmail.com', 1),
-(11, 'C011', 'Fadia', 'P', 'Jember', '2000-05-12', 'fadia@gmail.com', 2);
+(11, 'C011', 'Fadia', 'P', 'Jember', '2000-05-12', 'fadia@gmail.com', 2),
+(12, 'C012', 'Tes', 'L', 'Jember', '2003-05-08', 'tes@gmail.com', 1),
+(13, 'C012', 'Tes', 'L', 'Jember', '2003-05-08', 'tes@gmail.com', 1);
 
 -- --------------------------------------------------------
 
@@ -144,8 +146,32 @@ CREATE TABLE `pembayaran` (
   `tanggal` date DEFAULT NULL,
   `jumlah` double DEFAULT NULL,
   `ke` int(11) DEFAULT NULL,
-  `pesanan_id` int(11) NOT NULL
+  `pesanan_id` int(11) NOT NULL,
+  `status_pembayaran` varchar(25) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `pembayaran`
+--
+
+INSERT INTO `pembayaran` (`id`, `nokuitansi`, `tanggal`, `jumlah`, `ke`, `pesanan_id`, `status_pembayaran`) VALUES
+(1, 'KI001', '2023-03-10', 11000, 1, 11, 'lunas'),
+(2, 'KI002', '2023-09-12', 4000, 2, 12, 'belum lunas'),
+(5, 'KI003', '2023-09-12', 5000, 2, 12, 'lunas');
+
+--
+-- Triggers `pembayaran`
+--
+DELIMITER $$
+CREATE TRIGGER `set_status_pembayaran` BEFORE INSERT ON `pembayaran` FOR EACH ROW BEGIN
+    DECLARE total DOUBLE;
+    SELECT SUM(qty * harga) INTO total FROM pesanan_items WHERE pesanan_id = NEW.pesanan_id;
+    IF NEW.jumlah >= total THEN
+        SET NEW.status_pembayaran = 'lunas';
+    END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -201,7 +227,9 @@ INSERT INTO `pesanan` (`id`, `tanggal`, `total`, `pelanggan_id`) VALUES
 (7, '2015-11-04', 0, 5),
 (8, '2015-11-04', 0, 4),
 (9, '2015-11-04', 0, 8),
-(10, '2015-11-04', 0, 9);
+(10, '2015-11-04', 0, 9),
+(11, '2023-05-10', 10500, 11),
+(12, '2023-09-12', 5000, 11);
 
 -- --------------------------------------------------------
 
@@ -223,7 +251,9 @@ CREATE TABLE `pesanan_items` (
 
 INSERT INTO `pesanan_items` (`id`, `produk_id`, `pesanan_id`, `qty`, `harga`) VALUES
 (1, 10, 1, 2, 13000000),
-(2, 7, 1, 2, 2500);
+(2, 7, 1, 2, 2500),
+(3, 5, 11, 3, 3500),
+(5, 7, 12, 2, 2500);
 
 --
 -- Triggers `pesanan_items`
@@ -233,7 +263,7 @@ CREATE TRIGGER `keranjang_pesanan_items` BEFORE INSERT ON `pesanan_items` FOR EA
 SET @stok = (SELECT stok FROM produk WHERE id = NEW.produk_id);
 SET @sisa = @stok - NEW.qty;
 IF @sisa < 0 THEN
-SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT ='Warning: stok tidak cukup';
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Warning: stok tidak Cukup';
 END IF;
 UPDATE produk SET stok = @sisa WHERE id = NEW.produk_id;
 END
@@ -241,25 +271,25 @@ $$
 DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `transaksi_update_before` BEFORE UPDATE ON `pesanan_items` FOR EACH ROW BEGIN
-IF OLD.id = NEW.produk_id THEN
-SET @stok = (SELECT stok FROM produk WHERE id = OLD.produk_id);
-SET @sisa = (@stok + OLD.qty) - NEW.qty;
-IF @sisa < 0 THEN
-SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Warning: stok tidak cukup';
-END IF;
-UPDATE produk SET stok = @sisa WHERE id = OLD.produk_id;
-ELSE
-SET @stok_lama = (SELECT stok FROM produk WHERE id = OLD.produk_id);
-SET @sisa_lama = (@stok_lama + OLD.qty);
-UPDATE produk SET stok = @sisa_lama WHERE id = OLD.produk_id;
-SET @stok_baru = (SELECT stok FROM produk WHERE id = NEW.produk_id);
-SET @sisa_baru = @stok_baru - NEW.qty;
-IF @sisa_baru < 0 THEN
-SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Warning: stok tidak tersedia';
-END IF;
-UPDATE produk SET stok = @sisa_baru WHERE id = NEW.produk_id;
-END IF;
-END
+    IF OLD.id = NEW.produk_id THEN
+    SET @stok = (SELECT stok FROM produk WHERE id = OLD.produk_id);
+    SET @sisa = (@stok + OLD.qty) - NEW.qty;
+    IF @sisa < 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Warning: stok tidak cukup';
+    END IF;
+    UPDATE produk SET stok = @sisa WHERE id = OLD.produk_id;
+    ELSE
+    SET @stok_lama = (SELECT stok FROM produk WHERE id = OLD.produk_id);
+    SET @sisa_lama = (@stok_lama + OLD.qty);
+    UPDATE produk SET stok = @sisa_lama WHERE id = OLD.produk_id;
+    SET @stok_baru = (SELECT stok FROM produk WHERE id = NEW.produk_id);
+    SET @sisa_baru = @stok_baru - NEW.qty;
+    IF @sisa_baru < 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Warning: stok tidak tersedia';
+    END IF;
+    UPDATE produk SET stok = @sisa_baru WHERE id = NEW.produk_id;
+    END IF;
+    END
 $$
 DELIMITER ;
 
@@ -306,7 +336,7 @@ INSERT INTO `produk` (`id`, `kode`, `nama`, `harga_beli`, `harga_jual`, `stok`, 
 (2, 'TV02', 'Televisi 40 inch', 5500000, 7440000, 4, 2, 1),
 (3, 'K001', 'Kulkas 2 pintu', 3500000, 4680000, 6, 2, 1),
 (4, 'M001', 'Meja Makan', 500000, 600000, 4, 3, 2),
-(5, 'TK01', 'Teh Kotak', 3000, 3500, 40, 10, 4),
+(5, 'TK01', 'Teh Kotak', 3000, 3500, 37, 10, 4),
 (6, 'PC01', 'PC Desktop HP', 7000000, 9600000, 9, 2, 5),
 (7, 'TB01', 'Teh Botol', 2000, 2500, 51, 10, 4),
 (8, 'AC01', 'Notebook Acer', 8000000, 10800000, 7, 2, 5),
@@ -441,13 +471,13 @@ ALTER TABLE `kartu`
 -- AUTO_INCREMENT for table `pelanggan`
 --
 ALTER TABLE `pelanggan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `pembayaran`
 --
 ALTER TABLE `pembayaran`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `pembelian`
@@ -459,13 +489,13 @@ ALTER TABLE `pembelian`
 -- AUTO_INCREMENT for table `pesanan`
 --
 ALTER TABLE `pesanan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `pesanan_items`
 --
 ALTER TABLE `pesanan_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `produk`
@@ -493,7 +523,7 @@ ALTER TABLE `pelanggan`
 -- Constraints for table `pembayaran`
 --
 ALTER TABLE `pembayaran`
-  ADD CONSTRAINT `fk_pembayaran_pesanan1` FOREIGN KEY (`pesanan_id`) REFERENCES `pesanan` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+  ADD CONSTRAINT `fk_pembayaran_pesanan1` FOREIGN KEY (`pesanan_id`) REFERENCES `pesanan_items` (`pesanan_id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `pembelian`
@@ -506,7 +536,7 @@ ALTER TABLE `pembelian`
 -- Constraints for table `pesanan`
 --
 ALTER TABLE `pesanan`
-  ADD CONSTRAINT `fk_pesanan_customer` FOREIGN KEY (`pelanggan_id`) REFERENCES `pelanggan` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+  ADD CONSTRAINT `fk_pesanan_customer` FOREIGN KEY (`pelanggan_id`) REFERENCES `pelanggan` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `pesanan_items`
